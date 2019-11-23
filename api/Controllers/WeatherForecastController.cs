@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using api.Data;
 using api.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -12,6 +13,7 @@ namespace api.Controllers
 {
   [ApiController]
   [Route("[controller]")]
+  [Authorize]
   public class WeatherForecastController : ControllerBase
   {
     private static readonly string[] Summaries = new[]
@@ -48,6 +50,7 @@ namespace api.Controllers
       return Ok(values);
     }
 
+    [AllowAnonymous]
     [HttpGet("{id}")]
     public async Task<IActionResult> GetValue(int id)
     {

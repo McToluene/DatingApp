@@ -1,10 +1,14 @@
+using System.Text;
 using api.Data;
+using api.Repositories;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
 
 namespace api
 {
@@ -21,8 +25,18 @@ namespace api
     public void ConfigureServices(IServiceCollection services)
     {
       services.AddDbContext<DataContext>(optionsAction => optionsAction.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+      services.AddScoped<IAuthRepository, AuthRepository>();
       services.AddControllers();
       services.AddCors();
+      services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(
+        options => options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+        {
+          ValidateIssuerSigningKey = true,
+          IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration.GetSection("AppSettings:Token").Value)),
+          ValidateIssuer = false,
+          ValidateAudience = false
+        }
+      );
     }
 
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -36,7 +50,7 @@ namespace api
       // app.UseHttpsRedirection();
       app.UseCors(action => action.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
       app.UseRouting();
-      // app.UseAuthorization();
+      app.UseAuthorization();
       app.UseEndpoints(endpoints =>
       {
         endpoints.MapControllers();
