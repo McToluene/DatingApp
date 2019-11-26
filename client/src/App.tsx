@@ -1,13 +1,14 @@
-import React from "react";
+import React, { Fragment } from "react";
 import "./App.css";
-import Value from "./components/value/value";
+import Appbar from "./containers/appbar/Appbar";
+import Home from "./containers/home/home";
 
 const App: React.FC = () => {
   return (
-    <div>
-      <h1>Dating App</h1>
-      <Value />
-    </div>
+    <Fragment>
+      <Appbar />
+      <Home />
+    </Fragment>
   );
 };
 

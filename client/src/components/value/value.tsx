@@ -12,8 +12,12 @@ const Value: React.FC = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const res = await axios.get("http://localhost:5000/weatherForecast/");
-      setValues(res.data);
+      const res: any = await axios
+        .get("http://localhost:5000/weatherForecast/")
+        .catch(err => console.log(err));
+      if (res) {
+        setValues(res.data);
+      }
     };
     fetchData();
   }, []);
