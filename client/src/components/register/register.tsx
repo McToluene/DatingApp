@@ -59,7 +59,7 @@ const Register: FC<IRegisterProps> = ({ onCancel }) => {
     };
     Axios.post("http://localhost:5000/api/auth/register", registerUser)
       .then(res => console.log("Registered succesfully"))
-      .catch(err => console.log(err));
+      .catch(err => console.log(err.response.data.errors.Password));
   };
 
   return (
