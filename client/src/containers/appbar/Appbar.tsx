@@ -1,28 +1,30 @@
 import React, {
   Fragment,
-  useEffect,
   useState,
   FormEvent,
-  ChangeEvent
+  ChangeEvent,
+  useContext,
+  useEffect
 } from "react";
 import { Navbar, Nav, NavDropdown } from "react-bootstrap";
+import { Link, useHistory } from "react-router-dom";
+
 import Login from "../../components/login/login";
 import IUser from "../../model/IUser";
-
-import Axios from "axios";
+import { store } from "../../store";
+import { loginUser, logoutUser } from "../../action/authActions";
+import jwt_decode from "jwt-decode";
+import { setCurrentUser } from "../../action/authActions";
 
 const Appbar: React.FC = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const globalState = useContext(store);
+  const history = useHistory();
+  const { state, dispatch } = globalState;
   const [validated, setValidated] = useState(false);
   const [user, setUser] = useState<IUser>({
     password: "",
     username: ""
   });
-
-  const loggedIn = () => {
-    const token = localStorage.getItem("token");
-    return !!token;
-  };
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const name = event.target.name;
@@ -35,7 +37,7 @@ const Appbar: React.FC = () => {
     }
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>): void => {
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = event.currentTarget;
 
@@ -48,17 +50,7 @@ const Appbar: React.FC = () => {
       username: user.username,
       password: user.password
     };
-    submit(createdUser);
-  };
-
-  // submit user login details to api
-  const submit = async (user: IUser) => {
-    await Axios.post("http://localhost:5000/api/auth/login", user)
-      .then(result => {
-        localStorage.setItem("token", result.data.token);
-        setIsLoggedIn(true);
-      })
-      .catch(err => console.log(err));
+    loginUser(createdUser, dispatch, history);
   };
 
   // control login button on validity
@@ -72,49 +64,62 @@ const Appbar: React.FC = () => {
   };
 
   const onLogout = () => {
-    localStorage.removeItem("token");
-    console.log("Logged out successfully");
-    setIsLoggedIn(false);
+    logoutUser(dispatch, history);
   };
 
   useEffect(() => {
-    if (loggedIn()) {
-      setIsLoggedIn(true);
+    if (localStorage.token) {
+      const decoded = jwt_decode(localStorage.token);
+      dispatch(setCurrentUser(decoded));
+      history.push("/matches");
     }
-  }, []);
+  }, [dispatch, history]);
+
+  let authDisplay;
+  if (state != null && state.auth != null && state.auth.isAuth === true) {
+    authDisplay = (
+      <NavDropdown title="Welcome User" id="basic-nav-dropdown">
+        <NavDropdown.Item href="#action/3.1">
+          <i className="fa fa-user"></i> Edit Profile
+        </NavDropdown.Item>
+        <NavDropdown.Divider />
+        <NavDropdown.Item onClick={onLogout}>
+          <i className="fa fa-sign-out"></i>Logout
+        </NavDropdown.Item>
+      </NavDropdown>
+    );
+  } else {
+    authDisplay = (
+      <Login
+        handleSubmit={handleSubmit}
+        onChangeHandle={onFormChange}
+        validated={validated}
+        onInputChange={handleInputChange}
+        user={user}
+      />
+    );
+  }
 
   return (
     <Fragment>
       <Navbar bg="light" expand="sm">
-        <Navbar.Brand href="#home">DatingApp</Navbar.Brand>
+        <Navbar.Brand as={Link} to="/">
+          DatingApp
+        </Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="mr-auto">
-            <Nav.Link href="#matches">Matches</Nav.Link>
-            <Nav.Link href="#lists">Lists</Nav.Link>
-            <Nav.Link href="#messages">Messages</Nav.Link>
+            <Nav.Link as={Link} to="/matches">
+              Matches
+            </Nav.Link>
+            <Nav.Link as={Link} to="/lists">
+              Lists
+            </Nav.Link>
+            <Nav.Link as={Link} to="/messages">
+              Messages
+            </Nav.Link>
           </Nav>
-          <Nav>
-            {isLoggedIn ? (
-              <NavDropdown title="Welcome User" id="basic-nav-dropdown">
-                <NavDropdown.Item href="#action/3.1">
-                  <i className="fa fa-user"></i> Edit Profile
-                </NavDropdown.Item>
-                <NavDropdown.Divider />
-                <NavDropdown.Item href="#logout" onClick={onLogout}>
-                  <i className="fa fa-sign-out"></i>Logout
-                </NavDropdown.Item>
-              </NavDropdown>
-            ) : (
-              <Login
-                handleSubmit={handleSubmit}
-                onChangeHandle={onFormChange}
-                validated={validated}
-                onInputChange={handleInputChange}
-                user={user}
-              />
-            )}
-          </Nav>
+          <Nav>{authDisplay}</Nav>
         </Navbar.Collapse>
       </Navbar>
     </Fragment>

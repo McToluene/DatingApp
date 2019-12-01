@@ -1,4 +1,5 @@
 import { EActionTypes, IAction } from "../action/types";
+import { isEmpty } from "../utils/isEmpty";
 
 const initialState: IAuthState = {
   isAuth: false,
@@ -18,7 +19,7 @@ export default function authReducer(
     case EActionTypes.SET_CURRENT_USER:
       return {
         ...state,
-        isAuth: action.payload,
+        isAuth: !isEmpty(action.payload),
         user: action.payload
       };
     default:
