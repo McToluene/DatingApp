@@ -3,6 +3,7 @@ using System.Text;
 using api.Data;
 using api.Helpers;
 using api.Repositories;
+using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
@@ -30,8 +31,11 @@ namespace api
     {
       services.AddDbContext<DataContext>(optionsAction => optionsAction.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
       services.AddScoped<IAuthRepository, AuthRepository>();
-      services.AddControllers();
+      services.AddScoped<IDatingRepository, DatingRepository>();
+      services.AddControllers().AddNewtonsoftJson(x => x.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
       services.AddCors();
+      services.AddAutoMapper(typeof(Startup));
+      services.AddTransient<Seed>();
       services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(
         options => options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
         {
@@ -44,7 +48,7 @@ namespace api
     }
 
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env, Seed seeder)
     {
       if (env.IsDevelopment())
       {
@@ -69,6 +73,7 @@ namespace api
       }
 
       // app.UseHttpsRedirection();
+      // seeder.SeedUsers();
       app.UseCors(action => action.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
       app.UseRouting();
       app.UseAuthentication();
