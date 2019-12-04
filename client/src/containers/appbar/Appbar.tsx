@@ -6,15 +6,19 @@ import React, {
   useContext,
   useEffect
 } from "react";
-import { Navbar, Nav, NavDropdown } from "react-bootstrap";
+import { Navbar, Nav, NavDropdown, Container } from "react-bootstrap";
 import { Link, useHistory } from "react-router-dom";
 
 import Login from "../../components/login/login";
 import IUser from "../../model/IUser";
 import { store } from "../../store";
-import { loginUser, logoutUser } from "../../action/authActions";
+import {
+  loginUser,
+  logoutUser,
+  setCurrentUser
+} from "../../action/authActions";
+import setAuthToken from "../../utils/setAuthToken";
 import jwt_decode from "jwt-decode";
-import { setCurrentUser } from "../../action/authActions";
 
 const Appbar: React.FC = () => {
   const globalState = useContext(store);
@@ -67,14 +71,6 @@ const Appbar: React.FC = () => {
     logoutUser(dispatch, history);
   };
 
-  useEffect(() => {
-    if (localStorage.token) {
-      const decoded = jwt_decode(localStorage.token);
-      dispatch(setCurrentUser(decoded));
-      history.push("/matches");
-    }
-  }, [dispatch, history]);
-
   let authDisplay;
   if (state != null && state.auth != null && state.auth.isAuth === true) {
     authDisplay = (
@@ -84,7 +80,7 @@ const Appbar: React.FC = () => {
         </NavDropdown.Item>
         <NavDropdown.Divider />
         <NavDropdown.Item onClick={onLogout}>
-          <i className="fa fa-sign-out"></i>Logout
+          <i className="fa fa-sign-out-alt"></i>Logout
         </NavDropdown.Item>
       </NavDropdown>
     );
@@ -100,27 +96,39 @@ const Appbar: React.FC = () => {
     );
   }
 
+  useEffect(() => {
+    if (localStorage.token) {
+      setAuthToken(localStorage.token);
+      const decoded = jwt_decode(localStorage.token);
+      dispatch(setCurrentUser(decoded));
+      history.push("/matches");
+    }
+    console.log("in Navbar");
+  }, [history, dispatch]);
+
   return (
     <Fragment>
       <Navbar bg="light" expand="sm">
-        <Navbar.Brand as={Link} to="/">
-          DatingApp
-        </Navbar.Brand>
-        <Navbar.Toggle aria-controls="basic-navbar-nav" />
-        <Navbar.Collapse id="basic-navbar-nav">
-          <Nav className="mr-auto">
-            <Nav.Link as={Link} to="/matches">
-              Matches
-            </Nav.Link>
-            <Nav.Link as={Link} to="/lists">
-              Lists
-            </Nav.Link>
-            <Nav.Link as={Link} to="/messages">
-              Messages
-            </Nav.Link>
-          </Nav>
-          <Nav>{authDisplay}</Nav>
-        </Navbar.Collapse>
+        <Container>
+          <Navbar.Brand as={Link} to="/">
+            DatingApp
+          </Navbar.Brand>
+          <Navbar.Toggle aria-controls="basic-navbar-nav" />
+          <Navbar.Collapse id="basic-navbar-nav">
+            <Nav className="mr-auto">
+              <Nav.Link as={Link} to="/matches">
+                Matches
+              </Nav.Link>
+              <Nav.Link as={Link} to="/lists">
+                Lists
+              </Nav.Link>
+              <Nav.Link as={Link} to="/messages">
+                Messages
+              </Nav.Link>
+            </Nav>
+            <Nav>{authDisplay}</Nav>
+          </Navbar.Collapse>
+        </Container>
       </Navbar>
     </Fragment>
   );

@@ -2,12 +2,11 @@ import React, { FC, ChangeEvent, FormEvent } from "react";
 import { Form, FormControl, Button, FormGroup, Col } from "react-bootstrap";
 
 import "./login.css";
-import IUser from "../../model/IUser";
 
 interface ILoginProps {
   handleSubmit: (event: FormEvent<HTMLFormElement>) => void;
   validated: boolean;
-  user: IUser;
+  user: any;
   onChangeHandle: (event: FormEvent<HTMLFormElement>) => void;
   onInputChange: (event: ChangeEvent<HTMLInputElement>) => void;
 }
